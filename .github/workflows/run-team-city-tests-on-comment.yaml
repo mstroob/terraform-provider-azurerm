@@ -81,9 +81,6 @@ jobs:
 
           # Move to bin directory
           sudo mv tctest /usr/local/bin/
-
-          # Verify installation
-          tctest --version
           
       - name: Run tctest
         run: |
@@ -93,10 +90,10 @@ jobs:
           # Check if the comment contains /test -d for detailed output
           if [[ "$COMMENT_BODY" == *"/test -d"* ]]; then
             echo "Running tctest for PR #${PR_NUMBER} with detailed output"
-            tctest pr ${PR_NUMBER} --parameter "POST_GITHUB_COMMENT_DETAILED=true"
+            tctest pr ${PR_NUMBER} --properties "POST_GITHUB_COMMENT_DETAILED=true"
           else
             echo "Running tctest for PR #${PR_NUMBER}"
-            tctest pr ${PR_NUMBER} --parameter "POST_GITHUB_COMMENT=true"
+            tctest pr ${PR_NUMBER} --properties "POST_GITHUB_COMMENT=true"
           fi
 
       - name: Comment on success
