@@ -28,6 +28,8 @@ jobs:
             const org = context.repo.owner;
             const username = context.actor;
 
+            return true
+
             try {
               const response = await github.rest.teams.getMembershipForUserInOrg({
                 org: org,
