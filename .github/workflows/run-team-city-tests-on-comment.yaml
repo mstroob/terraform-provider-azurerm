@@ -29,8 +29,7 @@ jobs:
             const username = context.actor;
             core.setOutput('is-member', true);
 
-
-  run-tests:
+run-tests:
     runs-on: ubuntu-latest
     needs: check-team-membership
     if: needs.check-team-membership.outputs.is-team-member == 'true'
@@ -59,11 +58,24 @@ jobs:
         with:
           go-version: '1.25'
 
-      - name: Download and build tctest
+      - name: Get tctest version
+        id: tctest-version
         run: |
-          # Get the latest release of tctest
           LATEST_RELEASE=$(curl -s https://api.github.com/repos/katbyte/tctest/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          echo "version=${LATEST_RELEASE}" >> $GITHUB_OUTPUT
           echo "Latest tctest release: $LATEST_RELEASE"
+
+      - name: Cache tctest binary
+        id: cache-tctest
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/bin/tctest
+          key: tctest-${{ runner.os }}-${{ steps.tctest-version.outputs.version }}
+
+      - name: Download and build tctest
+        if: steps.cache-tctest.outputs.cache-hit != 'true'
+        run: |
+          LATEST_RELEASE="${{ steps.tctest-version.outputs.version }}"
 
           # Download source code
           DOWNLOAD_URL="https://github.com/katbyte/tctest/archive/refs/tags/${LATEST_RELEASE}.tar.gz"
@@ -79,9 +91,15 @@ jobs:
           echo "Building tctest..."
           go build -o tctest .
 
-          # Move to bin directory
-          sudo mv tctest /usr/local/bin/
-          
+          # Move to cache directory
+          mkdir -p ~/bin
+          mv tctest ~/bin/
+
+      - name: Install tctest
+        run: |
+          sudo cp ~/bin/tctest /usr/local/bin/
+          sudo chmod +x /usr/local/bin/tctest
+
       - name: Run tctest
         run: |
           PR_NUMBER=${{ github.event.issue.number }}
@@ -90,10 +108,10 @@ jobs:
           # Check if the comment contains /test -d for detailed output
           if [[ "$COMMENT_BODY" == *"/test -d"* ]]; then
             echo "Running tctest for PR #${PR_NUMBER} with detailed output"
-            tctest pr 31785 --properties "POST_GITHUB_COMMENT_DETAILED=true"
+            tctest pr ${PR_NUMBER} --properties "POST_GITHUB_COMMENT_DETAILED=true"
           else
             echo "Running tctest for PR #${PR_NUMBER}"
-            tctest pr 31785 --properties "POST_GITHUB_COMMENT=true"
+            tctest pr ${PR_NUMBER} --properties "POST_GITHUB_COMMENT=true"
           fi
 
       - name: Comment on success
@@ -138,5 +156,3 @@ jobs:
               issue_number: context.issue.number,
               body: '⚠️ You are not authorized to run tests. Only members of the designated team can trigger test runs.'
             });
-
-# Made with Bob
