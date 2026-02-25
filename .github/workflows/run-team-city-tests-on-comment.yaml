@@ -39,7 +39,7 @@ jobs:
       TCTEST_FILEREGEX: 'internal/services/[a-z]*/[_a-zA-Z]*(resource|data_source)'
       TCTEST_SKIP_QUEUE: 'true'
       TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
-      TCTEST_BUILDTYPEID: TF_AzureRM_AZURERM_SERVICE_PUBLIC
+      TCTEST_BUILDTYPEID: Development_MsPostResults
       TCTEST_REPO: terraform-providers/terraform-provider-azurerm
     steps:
       - name: Add reaction to comment
@@ -54,35 +54,37 @@ jobs:
               content: 'rocket'
             });
 
-      - name: Download tctest
+      - name: Setup Go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.2.0
+        with:
+          go-version: '1.25'
+
+      - name: Download and build tctest
         run: |
           # Get the latest release of tctest
           LATEST_RELEASE=$(curl -s https://api.github.com/repos/katbyte/tctest/releases/latest | grep "tag_name" | cut -d '"' -f 4)
           echo "Latest tctest release: $LATEST_RELEASE"
 
-          # Determine OS and architecture
-          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m)
+          # Download source code
+          DOWNLOAD_URL="https://github.com/katbyte/tctest/archive/refs/tags/${LATEST_RELEASE}.tar.gz"
+          echo "Downloading source from: $DOWNLOAD_URL"
 
-          # Map architecture names
-          if [ "$ARCH" = "x86_64" ]; then
-            ARCH="amd64"
-          elif [ "$ARCH" = "aarch64" ]; then
-            ARCH="arm64"
-          fi
+          curl -L -o tctest-source.tar.gz "$DOWNLOAD_URL"
+          tar -xzf tctest-source.tar.gz
 
-          # Download and extract tctest
-          DOWNLOAD_URL="https://github.com/katbyte/tctest/releases/download/${LATEST_RELEASE}/tctest_${LATEST_RELEASE#v}_${OS}_${ARCH}.tar.gz"
-          echo "Downloading from: $DOWNLOAD_URL"
+          # Navigate to extracted directory (strip version prefix 'v')
+          cd tctest-${LATEST_RELEASE#v}
 
-          curl -L -o tctest.tar.gz "$DOWNLOAD_URL"
-          tar -xzf tctest.tar.gz
-          chmod +x tctest
+          # Build tctest
+          echo "Building tctest..."
+          go build -o tctest .
+
+          # Move to bin directory
           sudo mv tctest /usr/local/bin/
 
           # Verify installation
           tctest --version
-
+          
       - name: Run tctest
         run: |
           PR_NUMBER=${{ github.event.issue.number }}
@@ -91,10 +93,10 @@ jobs:
           # Check if the comment contains /test -d for detailed output
           if [[ "$COMMENT_BODY" == *"/test -d"* ]]; then
             echo "Running tctest for PR #${PR_NUMBER} with detailed output"
-            tctest pr ${PR_NUMBER} --parameter "COMMENT_DETAILED=true"
+            tctest pr ${PR_NUMBER} --parameter "POST_GITHUB_COMMENT_DETAILED=true"
           else
             echo "Running tctest for PR #${PR_NUMBER}"
-            tctest pr ${PR_NUMBER}
+            tctest pr ${PR_NUMBER} --parameter "POST_GITHUB_COMMENT=true"
           fi
 
       - name: Comment on success
