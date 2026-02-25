@@ -28,7 +28,7 @@ jobs:
             const username = context.actor;
             core.setOutput('is-member', true);
 
-run-tests:
+  run-tests:
     runs-on: ubuntu-latest
     needs: check-team-membership
     if: needs.check-team-membership.outputs.is-team-member == 'true'
