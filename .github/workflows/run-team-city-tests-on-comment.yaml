@@ -30,8 +30,6 @@ jobs:
             
             try {
               const response = await github.rest.teams.getMembershipForUserInOrg({
-                # org: org,
-                # team_slug: teamSlug,
                 username: username,
               });
 
