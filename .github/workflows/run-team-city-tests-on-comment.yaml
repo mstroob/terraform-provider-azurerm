@@ -17,7 +17,7 @@ jobs:
     outputs:
       is-team-member: ${{ steps.check-membership.outputs.is-member }}
     env:
-      AUTHORIZED_TEAM: terraform-azure
+      AUTHORIZED_TEAM: "terraform-azure"
     steps:
       - name: Check team membership
         id: check-membership
