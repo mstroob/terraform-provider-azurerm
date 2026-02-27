@@ -17,7 +17,7 @@ jobs:
     outputs:
       is-team-member: ${{ steps.check-membership.outputs.is-member }}
     env:
-      AUTHORIZED_TEAM: "terraform-azure"
+      AUTHORIZED_TEAM: terraform-azure
     steps:
       - name: Check team membership
         id: check-membership
@@ -25,7 +25,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const teamSlug = ${{ env.AUTHORIZED_TEAM }};
+            const teamSlug = "${{ env.AUTHORIZED_TEAM }}";
             const org = hashicorp;
             const username = context.actor;
 
