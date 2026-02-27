@@ -16,6 +16,8 @@ jobs:
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/test')
     outputs:
       is-team-member: ${{ steps.check-membership.outputs.is-member }}
+    env:
+      AUTHORIZED_TEAM: terraform-azure
     steps:
       - name: Check team membership
         id: check-membership
@@ -23,10 +25,35 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const teamSlug = 'terraform-azure';
-            const org = context.repo.owner;
+            const teamSlug = ${AUTHORIZED_TEAM};
+            const org = hashicorp;
             const username = context.actor;
-            core.setOutput('is-member', true);
+
+            try {
+              const response = await github.rest.teams.getMembershipForUserInOrg({
+                org: org,
+                team_slug: teamSlug,
+                username: username,
+              });
+
+              const isMember = response.data.state === 'active';
+              core.setOutput('is-member', isMember);
+
+              if (isMember) {
+                core.info(`User ${username} is a member of team ${teamSlug}`);
+              } else {
+                core.warning(`User ${username} is not an active member of team ${teamSlug}`);
+              }
+
+              return isMember;
+            } catch (error) {
+              if (error.status === 404) {
+                core.warning(`User ${username} is not a member of team ${teamSlug}`);
+                core.setOutput('is-member', false);
+                return false;
+              }
+              throw error;
+            }
 
   run-tests:
     runs-on: ubuntu-latest
