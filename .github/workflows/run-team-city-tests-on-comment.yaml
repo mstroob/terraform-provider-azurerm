@@ -25,7 +25,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const teamSlug = ${AUTHORIZED_TEAM};
+            const teamSlug = ${{ env.AUTHORIZED_TEAM }};
             const org = hashicorp;
             const username = context.actor;
 
