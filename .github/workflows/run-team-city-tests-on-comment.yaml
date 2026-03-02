@@ -13,7 +13,7 @@ jobs:
   check-team-membership:
     runs-on: ubuntu-latest
     # Only run on pull request comments that contain /test
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/test')
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test')
     outputs:
       is-team-member: ${{ steps.check-membership.outputs.is-member }}
     env:
