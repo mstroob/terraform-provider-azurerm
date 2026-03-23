@@ -83,16 +83,9 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.issue.number }}
           COMMENT_BODY="${{ github.event.comment.body }}"
-
-          # Check if the comment contains /test -d for detailed output
-          if [[ "$COMMENT_BODY" == *"/test -d"* ]]; then
-            echo "Running tctest for PR #${PR_NUMBER} with detailed output"
-            tctest pr 31833 --properties "POST_GITHUB_COMMENT_DETAILED=true"
-          else
-            echo "Running tctest for PR #${PR_NUMBER}"
-            tctest pr 31833 --properties "POST_GITHUB_COMMENT=true"
-          fi
-
+          echo "Running tctest for PR #${PR_NUMBER}"
+          tctest pr 31833 --properties "POST_GITHUB_COMMENT=true"
+          
       - name: Comment on success
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
