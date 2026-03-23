@@ -71,7 +71,7 @@ jobs:
         id: cache-tctest
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ~/go/bin/tctest
+          path: ${GOPATH}/bin/tctest
           key: tctest-${{ runner.os }}-${{ steps.tctest-version.outputs.version }}
 
       - name: Download and build tctest
