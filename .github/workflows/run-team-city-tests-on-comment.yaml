@@ -81,6 +81,7 @@ jobs:
 
       - name: Run tctest
         run: |
+          whereis tctest
           PR_NUMBER=${{ github.event.issue.number }}
           COMMENT_BODY="${{ github.event.comment.body }}"
           echo "Running tctest for PR #${PR_NUMBER}"
