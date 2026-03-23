@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/timeouts"
 )
 
+
 //go:generate go run ../../tools/generator-tests resourceidentity -resource-name private_dns_a_record -properties "name,private_dns_zone_name:zone_name,resource_group_name" -compare-values "record_type:id"
 
 func resourcePrivateDnsARecord() *pluginsdk.Resource {
